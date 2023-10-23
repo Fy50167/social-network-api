@@ -1,11 +1,11 @@
 const { ObjectId } = require('mongoose').Types;
-const { User, Thought, reactionSchema } = require('../models');
+const { User, Thought } = require('../models');
 
 
 module.exports = {
     async getThoughts(req, res) {
         try {
-            const thoughts = await Thought.find().select('-__v');;
+            const thoughts = await Thought.find().select('-__v');
 
             res.json(thoughts);
         } catch (err) {
@@ -83,11 +83,9 @@ module.exports = {
 
     async createReaction(req, res) {
         try {
-            const reaction = await reactionSchema.create(req.body);
-
             const thought = await Thought.findOneAndUpdate(
                 { _id: req.params.thoughtId },
-                { $push: { reactions: reaction } },
+                { $push: { reactions: req.body } },
                 { runValidators: true, new: true }
             );
 
