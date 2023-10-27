@@ -5,9 +5,9 @@ const { User, Thought } = require('../models');
 module.exports = {
     async getThoughts(req, res) {
         try {
-            const thoughts = await Thought.find().select('-__v');
+            const thought = await Thought.find().select('-__v');
 
-            res.json(thoughts);
+            res.json(thought);
         } catch (err) {
             console.log(err);
             return res.status(500).json(err);
@@ -75,11 +75,21 @@ module.exports = {
             res.status(404).json({ message: 'No thought with this ID!' });
           }
 
+          if (!req.body.userId) {
+            res.status(404).json({ message: 'Please specify the user that this is being deleted from!' })
+          }
+
+          const user = await User.findOneAndUpdate(
+            { _id: req.body.userId },
+            { $pull: { thoughts: req.params.thoughtId } },
+            { runValidators: true, new: true }
+          );
+
           res.json({ message: 'Thought has been deleted.' });
         } catch (err) {
           res.status(500).json(err);
         }
-      },
+    },
 
     async createReaction(req, res) {
         try {
@@ -100,22 +110,19 @@ module.exports = {
     },
 
     async deleteReaction(req,res) {
+        console.log(req.params);
         try {
             const thought = await Thought.findOneAndUpdate(
                 { _id: req.params.thoughtId },
-                { $pull: { reactions: req.body.reactionId } },
+                { $pull: { reactions: { "reactionId": req.params.reactionId } } },
                 { runValidators: true, new: true }
             );
-
+            
             if (!thought) {
                 res.status(404).json({ message: 'No thought with that ID!' });
             }
-
-            if (!req.body.reactionId) {
-                res.status(404).json({ message: 'No reaction with that ID!' });
-            }
     
-            res.json({ message: 'Reaction successfully deleted.'});
+            res.json(thought);
         } catch (err) {
             res.status(500).json(err);
         }
